@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "notifications",
+  "info": {
+    "singularName": "notification",
+    "pluralName": "notifications",
+    "displayName": "Notification",
+    "description": "Placeholder entity (no driving requirement). Minimal generic notification for a recipient; users read/mark only their own (Phase 10)."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "message": {
+      "type": "text",
+      "required": true
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "enrollment",
+        "quiz-graded",
+        "system"
+      ]
+    },
+    "isRead": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "link": {
+      "type": "string"
+    },
+    "recipient": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "notifications"
+    }
+  }
+}

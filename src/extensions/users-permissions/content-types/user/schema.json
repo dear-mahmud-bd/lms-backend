@@ -1,0 +1,56 @@
+{
+  "attributes": {
+    "appRole": {
+      "type": "enumeration",
+      "enum": [
+        "admin",
+        "content-manager",
+        "instructor",
+        "student"
+      ],
+      "required": true
+    },
+    "otpCode": {
+      "type": "string"
+    },
+    "otpExpiresAt": {
+      "type": "datetime"
+    },
+    "coursesOwned": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::course.course",
+      "mappedBy": "instructor"
+    },
+    "enrollments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::enrollment.enrollment",
+      "mappedBy": "student"
+    },
+    "progressEntries": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::progress.progress",
+      "mappedBy": "student"
+    },
+    "quizAttempts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::quiz-attempt.quiz-attempt",
+      "mappedBy": "student"
+    },
+    "blogPosts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::blog-post.blog-post",
+      "mappedBy": "author"
+    },
+    "notifications": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::notification.notification",
+      "mappedBy": "recipient"
+    }
+  }
+}
