@@ -1241,15 +1241,24 @@ export interface PluginUsersPermissionsUser
     appRole: Schema.Attribute.Enumeration<
       ['admin', 'content-manager', 'instructor', 'student']
     > &
-      Schema.Attribute.Required;
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'student'>;
+    blocked: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     blogPosts: Schema.Attribute.Relation<
       'oneToMany',
       'api::blog-post.blog-post'
     >;
+    confirmationToken: Schema.Attribute.String & Schema.Attribute.Private;
+    confirmed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     coursesOwned: Schema.Attribute.Relation<'oneToMany', 'api::course.course'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    email: Schema.Attribute.Email &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        minLength: 6;
+      }>;
     enrollments: Schema.Attribute.Relation<
       'oneToMany',
       'api::enrollment.enrollment'
@@ -1266,18 +1275,35 @@ export interface PluginUsersPermissionsUser
     >;
     otpCode: Schema.Attribute.String;
     otpExpiresAt: Schema.Attribute.DateTime;
+    password: Schema.Attribute.Password &
+      Schema.Attribute.Private &
+      Schema.Attribute.SetMinMaxLength<{
+        minLength: 6;
+      }>;
     progressEntries: Schema.Attribute.Relation<
       'oneToMany',
       'api::progress.progress'
     >;
+    provider: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     quizAttempts: Schema.Attribute.Relation<
       'oneToMany',
       'api::quiz-attempt.quiz-attempt'
     >;
+    resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
+    role: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.role'
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    username: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
+        minLength: 3;
+      }>;
   };
 }
 
