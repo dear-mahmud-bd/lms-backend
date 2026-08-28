@@ -51,6 +51,11 @@ const BASELINE_PERMISSIONS: Record<'public' | 'authenticated', string[]> = {
     'api::enrollment.enrollment.create',
     // Task 5.2: My Courses — returns only the caller's own enrollments.
     'api::enrollment.enrollment.me',
+    // Task 6.1: mark a lesson complete — Student only (has-app-role); enrollment + idempotency
+    // enforced in the controller.
+    'api::progress.progress.markComplete',
+    // Task 6.2: computed course progress — role checks (own/owner/staff) in the controller.
+    'api::progress.progress.getCourseProgress',
   ],
 };
 
