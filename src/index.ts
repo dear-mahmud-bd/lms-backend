@@ -72,6 +72,13 @@ const BASELINE_PERMISSIONS: Record<'public' | 'authenticated', string[]> = {
     'api::quiz-attempt.quiz-attempt.create',
     // Task 7.4: My attempts — returns only the caller's own attempts (with answers).
     'api::quiz-attempt.quiz-attempt.me',
+    // Task 8.1: blog writes — Admin/CM only (has-app-role); update/delete add is-owner(author) with
+    // CM own-only (bypassRoles ['admin']). Controller sets author + forces draft on create.
+    'api::blog-post.blog-post.create',
+    'api::blog-post.blog-post.update',
+    'api::blog-post.blog-post.delete',
+    // Task 8.2: publish a post (Admin any / CM own via route policies).
+    'api::blog-post.blog-post.publish',
   ],
 };
 

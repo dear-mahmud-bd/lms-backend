@@ -15,6 +15,8 @@ const { NotFoundError } = errors;
  *                 Direct:  'instructor' | 'author' | 'student'
  *                 Nested:  'course.instructor'  (lessons, quizzes)
  *   idParam     : route param holding the resource id (default 'id')
+ *   bypassRoles : appRoles that skip the ownership check (default ['admin','content-manager']).
+ *                 Blog uses ['admin'] because a content-manager may only manage their OWN posts.
  *
  * Example:
  *   { name: 'global::is-owner',
@@ -24,7 +26,7 @@ const { NotFoundError } = errors;
  * plugin `role.type`.
  */
 
-const BYPASS_ROLES = ['admin', 'content-manager'];
+const DEFAULT_BYPASS_ROLES = ['admin', 'content-manager'];
 
 /** Build a Strapi populate object from a dotted owner path: ['course','instructor'] -> { course: { populate: { instructor: true } } } */
 function buildPopulate(segments: string[]): any {
@@ -34,7 +36,12 @@ function buildPopulate(segments: string[]): any {
 }
 
 export default async (policyContext: any, config: any, { strapi }: { strapi: any }) => {
-  const { contentType, ownerPath = 'instructor', idParam = 'id' } = config || {};
+  const {
+    contentType,
+    ownerPath = 'instructor',
+    idParam = 'id',
+    bypassRoles = DEFAULT_BYPASS_ROLES,
+  } = config || {};
 
   if (!contentType) {
     strapi.log.error('[is-owner] misconfigured: `config.contentType` is required');
@@ -44,8 +51,8 @@ export default async (policyContext: any, config: any, { strapi }: { strapi: any
   const user = policyContext.state.user;
   if (!user) return false; // no auth -> 403
 
-  // Admin / content-manager manage anything — no ownership load needed.
-  if (BYPASS_ROLES.includes(user.appRole)) return true;
+  // Roles that manage anything — no ownership load needed. (Blog narrows this to admin only.)
+  if (bypassRoles.includes(user.appRole)) return true;
 
   const documentId = policyContext.params[idParam];
   if (!documentId) return false;
