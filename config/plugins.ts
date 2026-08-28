@@ -31,6 +31,26 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin =>
       },
     },
   },
+  // Task 3.3: email delivery (used to send the OTP on register). Credentials come from env vars
+  // set BY HAND (never committed) — see .env.example. Locally, if SMTP isn't configured, sends
+  // fail and the register override logs the OTP instead (dev-only fallback).
+  email: {
+    config: {
+      provider: 'nodemailer',
+      providerOptions: {
+        host: env('SMTP_HOST', 'localhost'),
+        port: env.int('SMTP_PORT', 587),
+        auth: {
+          user: env('SMTP_USERNAME'),
+          pass: env('SMTP_PASSWORD'),
+        },
+      },
+      settings: {
+        defaultFrom: env('EMAIL_FROM', 'no-reply@lms.local'),
+        defaultReplyTo: env('EMAIL_REPLY_TO', env('EMAIL_FROM', 'no-reply@lms.local')),
+      },
+    },
+  },
   upload: {
     config: {
       security: {
