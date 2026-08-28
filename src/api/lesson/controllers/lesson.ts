@@ -84,8 +84,14 @@ export default factories.createCoreController('api::lesson.lesson', ({ strapi })
 
     const isOwner = course.instructor?.id === user?.id;
     if (!canManageAny(user) && !isOwner) {
-      // Task 4.2 placeholder: only staff/owner for now. Task 5.2 relaxes this to enrolled students.
-      return ctx.forbidden('You must be enrolled in this course to view its lessons.');
+      // Task 5.2: a student may read a course's lessons only if enrolled in it (staff/owner above
+      // are exempt). Enrollment is a prior grant, so we don't re-check the course's publish state.
+      const enrollment = await strapi.db.query('api::enrollment.enrollment').findOne({
+        where: { student: user?.id, course: course.id },
+      });
+      if (!enrollment) {
+        return ctx.forbidden('You must be enrolled in this course to view its lessons.');
+      }
     }
 
     const lessons = await strapi.documents('api::lesson.lesson').findMany({

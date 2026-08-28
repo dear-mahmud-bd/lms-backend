@@ -46,6 +46,11 @@ const BASELINE_PERMISSIONS: Record<'public' | 'authenticated', string[]> = {
     'api::lesson.lesson.update',
     'api::lesson.lesson.delete',
     'api::lesson.lesson.findByCourse',
+    // Task 5.1: enroll — Student only (has-app-role on the route); controller sets student from JWT
+    // and blocks duplicates.
+    'api::enrollment.enrollment.create',
+    // Task 5.2: My Courses — returns only the caller's own enrollments.
+    'api::enrollment.enrollment.me',
   ],
 };
 
