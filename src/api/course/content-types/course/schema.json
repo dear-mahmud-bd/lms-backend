@@ -8,7 +8,7 @@
     "description": "A course owned by an instructor; contains lessons and quizzes."
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {

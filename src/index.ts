@@ -37,6 +37,15 @@ const BASELINE_PERMISSIONS: Record<'public' | 'authenticated', string[]> = {
     // route is reachable but the policies do the real gating. (`create` stays closed until 4.1.)
     'api::course.course.update',
     'api::course.course.delete',
+    // Task 4.1: create is guarded by the `has-app-role` policy on the route (Student -> 403),
+    // and the controller forces `instructor` to the caller.
+    'api::course.course.create',
+    // Task 4.2: lesson writes are guarded by has-app-role + is-owner (course.instructor); the
+    // custom findByCourse route limits visibility to staff/owner (5.2 adds the enrollment gate).
+    'api::lesson.lesson.create',
+    'api::lesson.lesson.update',
+    'api::lesson.lesson.delete',
+    'api::lesson.lesson.findByCourse',
   ],
 };
 

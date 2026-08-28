@@ -15,6 +15,10 @@ const COURSE_OWNERSHIP = { contentType: 'api::course.course', ownerPath: 'instru
 
 export default factories.createCoreRouter('api::course.course', {
   config: {
+    create: {
+      // Only admin/content-manager/instructor may create; the controller sets the owner from JWT.
+      policies: [{ name: 'global::has-app-role', config: STAFF_OR_INSTRUCTOR }],
+    },
     update: {
       policies: [
         { name: 'global::has-app-role', config: STAFF_OR_INSTRUCTOR },
