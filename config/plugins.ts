@@ -59,6 +59,22 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin =>
       },
     },
   },
+  // Task 11.1: additive, READ-ONLY GraphQL layer for dashboard queries. `shadowCRUD: false` means
+  // NO auto-generated CRUD — no mutations (so ownership can't be bypassed) and no auto reads that
+  // would skip our controller-level visibility filters (e.g. blog drafts). The only field exposed
+  // is the explicit, admin-only `dashboardStats` query registered in src/graphql/dashboard-stats.ts.
+  // Playground stays dev-only.
+  graphql: {
+    config: {
+      shadowCRUD: false,
+      landingPage: false,
+      // Query-shape guards (hygiene): our schema is a single shallow query, but bound depth/limit
+      // so the endpoint can't be abused with pathological queries.
+      depthLimit: 10,
+      defaultLimit: 25,
+      maxLimit: 100,
+    },
+  },
 });
 
 export default config;

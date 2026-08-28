@@ -1,4 +1,5 @@
 import type { Core } from '@strapi/strapi';
+import { registerDashboardStats } from './graphql/dashboard-stats';
 
 /**
  * Baseline route permissions (task 2.2).
@@ -85,6 +86,11 @@ const BASELINE_PERMISSIONS: Record<'public' | 'authenticated', string[]> = {
     // Route must be opened to Authenticated so an admin JWT reaches the policy; the policy
     // (not this grant) is what restricts it to admins.
     'api::admin.admin.setUserRole',
+    // Task 10.1: own-only notifications — any authenticated user reads their own list (`me`) and
+    // marks their own read (`markRead`). `me` filters by JWT id; `markRead` is gated by the
+    // is-owner policy (recipient, no admin bypass). Core CRUD stays closed.
+    'api::notification.notification.me',
+    'api::notification.notification.markRead',
   ],
 };
 
@@ -127,7 +133,11 @@ export default {
    * An asynchronous register function that runs before
    * your application is initialized.
    */
-  register(/* { strapi }: { strapi: Core.Strapi } */) {},
+  register({ strapi }: { strapi: Core.Strapi }) {
+    // Task 11.1: register the read-only, admin-only `dashboardStats` GraphQL query. Must run in
+    // `register` so the graphql extension is applied before the schema is built.
+    registerDashboardStats(strapi);
+  },
 
   /**
    * An asynchronous bootstrap function that runs before
