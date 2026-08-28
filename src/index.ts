@@ -56,6 +56,22 @@ const BASELINE_PERMISSIONS: Record<'public' | 'authenticated', string[]> = {
     'api::progress.progress.markComplete',
     // Task 6.2: computed course progress — role checks (own/owner/staff) in the controller.
     'api::progress.progress.getCourseProgress',
+    // Task 7.1: quiz + question writes — guarded by has-app-role + is-owner (course.instructor /
+    // quiz.course.instructor); controllers validate ownership + correctAnswer range.
+    'api::quiz.quiz.create',
+    'api::quiz.quiz.update',
+    'api::quiz.quiz.delete',
+    'api::question.question.create',
+    'api::question.question.update',
+    'api::question.question.delete',
+    // Task 7.2: student-facing quiz-taking read (strips correctAnswer; controller gates on
+    // published + enrollment).
+    'api::quiz.quiz.take',
+    // Task 7.3: submit a quiz attempt — Student only (has-app-role); server grades against the
+    // stored correctAnswer and computes score/totalQuestions.
+    'api::quiz-attempt.quiz-attempt.create',
+    // Task 7.4: My attempts — returns only the caller's own attempts (with answers).
+    'api::quiz-attempt.quiz-attempt.me',
   ],
 };
 
