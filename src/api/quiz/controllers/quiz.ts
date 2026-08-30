@@ -164,4 +164,49 @@ export default factories.createCoreController('api::quiz.quiz', ({ strapi }) => 
       },
     };
   },
+
+  /**
+   * GET /api/quizzes/by-course/:courseId — list a course's quizzes as METADATA only
+   * (title/description/questionCount). Same gating as `take`: owner/staff see all
+   * quizzes (incl. drafts) with `isPublished`; an enrolled student sees published
+   * quizzes only; anyone else is 403. Never serializes questions or correctAnswer —
+   * this is just an index; authoring/taking have their own reads.
+   */
+  async listByCourse(ctx) {
+    const user = ctx.state.user;
+    const course = await loadCourse(strapi, ctx.params.courseId);
+    if (!course) return ctx.notFound('Course not found.');
+
+    const isOwner = course.instructor?.id === user?.id;
+    const staffOrOwner = canManageAny(user) || isOwner;
+
+    // Students may only list quizzes for a course they're enrolled in.
+    if (!staffOrOwner) {
+      const enrolled = await strapi.db.query('api::enrollment.enrollment').findOne({
+        where: { student: user?.id, course: course.id },
+      });
+      if (!enrolled) {
+        return ctx.forbidden('You must be enrolled in this course to view its quizzes.');
+      }
+    }
+
+    const quizzes = await strapi.db.query('api::quiz.quiz').findMany({
+      // Students never see drafts; owner/staff see everything.
+      where: staffOrOwner ? { course: course.id } : { course: course.id, isPublished: true },
+      populate: { questions: true },
+      orderBy: { id: 'asc' },
+    });
+
+    ctx.body = {
+      data: quizzes.map((q: any) => ({
+        id: q.id,
+        documentId: q.documentId,
+        title: q.title,
+        description: q.description,
+        questionCount: Array.isArray(q.questions) ? q.questions.length : 0,
+        // isPublished is only meaningful to (and only returned for) owner/staff.
+        ...(staffOrOwner ? { isPublished: q.isPublished } : {}),
+      })),
+    };
+  },
 }));

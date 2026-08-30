@@ -68,6 +68,9 @@ const BASELINE_PERMISSIONS: Record<'public' | 'authenticated', string[]> = {
     // Task 7.2: student-facing quiz-taking read (strips correctAnswer; controller gates on
     // published + enrollment).
     'api::quiz.quiz.take',
+    // Quiz discovery: list a course's quizzes as metadata. Controller gates owner/staff (all,
+    // incl. drafts) vs enrolled student (published only, no correctAnswer); others 403.
+    'api::quiz.quiz.listByCourse',
     // Task 7.3: submit a quiz attempt — Student only (has-app-role); server grades against the
     // stored correctAnswer and computes score/totalQuestions.
     'api::quiz-attempt.quiz-attempt.create',

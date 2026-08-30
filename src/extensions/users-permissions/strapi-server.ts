@@ -26,6 +26,7 @@ import crypto from 'crypto';
  */
 
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const RESEND_COOLDOWN_MS = 60 * 1000; // min gap between resends per account
 
 /** 6-digit numeric OTP, zero-padded (e.g. "004217"). */
 function generateOtp(): string {
@@ -147,6 +148,44 @@ export default (plugin: any) => {
       };
     };
 
+    // --- Resend OTP -----------------------------------------------------------------------
+    // Public: re-issue + re-email a code for an UNVERIFIED account so a user who let the first
+    // code expire can verify later. Always returns the SAME generic 200 regardless of whether the
+    // email exists or is already verified, so it can't be used to enumerate accounts. A 60s
+    // per-account cooldown (derived from otpExpiresAt — no schema change) sits on top of the
+    // route's IP rate-limit.
+    controller.resendOtp = async (ctx: any) => {
+      const { email } = ctx.request.body || {};
+      if (!email) return ctx.badRequest('email is required');
+
+      const GENERIC = { message: 'If that account exists and is unverified, a new code has been sent.' };
+      const normalizedEmail = String(email).trim().toLowerCase();
+      const user = await strapi.db
+        .query('plugin::users-permissions.user')
+        .findOne({ where: { email: normalizedEmail } });
+
+      // Nothing to do for a missing or already-verified account — but respond identically so the
+      // caller learns nothing about the account's state.
+      if (!user || user.confirmed) return (ctx.body = GENERIC);
+
+      // Cooldown: if the current code was issued < 60s ago, don't rotate or re-send.
+      if (user.otpExpiresAt) {
+        const issuedAt = new Date(user.otpExpiresAt).getTime() - OTP_TTL_MS;
+        if (Date.now() - issuedAt < RESEND_COOLDOWN_MS) return (ctx.body = GENERIC);
+      }
+
+      // Rotate the code (invalidates the old one) and re-send.
+      const otpCode = generateOtp();
+      const otpExpiresAt = new Date(Date.now() + OTP_TTL_MS);
+      await strapi.db.query('plugin::users-permissions.user').update({
+        where: { id: user.id },
+        data: { otpCode, otpExpiresAt },
+      });
+      await sendOtpEmail(user.email, otpCode);
+
+      return (ctx.body = GENERIC);
+    };
+
     // --- Task 3.3: login gate for unverified users ---------------------------------------
     // `auth.callback` is the handler behind POST /api/auth/local (login). Pre-check the account's
     // verified state so an unverified user never gets a JWT/refresh session; verified users (and
@@ -176,6 +215,18 @@ export default (plugin: any) => {
     method: 'POST',
     path: '/auth/verify-otp',
     handler: 'auth.verifyOtp',
+    config: {
+      auth: false,
+      middlewares: ['plugin::users-permissions.rateLimit'],
+      prefix: '',
+    },
+  });
+
+  // Public resend-OTP route (mirrors verify-otp: no JWT, IP rate-limited).
+  plugin.routes['content-api'].routes.push({
+    method: 'POST',
+    path: '/auth/resend-otp',
+    handler: 'auth.resendOtp',
     config: {
       auth: false,
       middlewares: ['plugin::users-permissions.rateLimit'],
