@@ -46,7 +46,26 @@ export default factories.createCoreController('api::course.course', ({ strapi })
   },
 
   async find(ctx) {
-    if (!isStaff(ctx.state.user)) {
+    const user = ctx.state.user;
+
+    // Instructors manage only their OWN courses (task 15.1). We can't let the
+    // client filter by the `instructor` relation — the content-API query
+    // validator rejects it ("Invalid key instructor") because that users-
+    // permissions relation is protected. So scope it server-side via the core
+    // service (not subject to that query validation) using the JWT's user id.
+    if (user?.appRole === 'instructor') {
+      const sanitizedQuery = await (this as any).sanitizeQuery(ctx);
+      const { results, pagination } = await strapi
+        .service('api::course.course')
+        .find({
+          ...sanitizedQuery,
+          filters: { ...(sanitizedQuery?.filters || {}), instructor: user.id },
+        });
+      const sanitized = await (this as any).sanitizeOutput(results, ctx);
+      return (this as any).transformResponse(sanitized, { pagination });
+    }
+
+    if (!isStaff(user)) {
       // Students and the public only ever see published courses.
       ctx.query = {
         ...ctx.query,

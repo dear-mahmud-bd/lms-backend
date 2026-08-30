@@ -2,6 +2,8 @@
  * admin controller — a content-type-less namespace for admin-only actions.
  *
  * GET  /api/admin/stats            (task 9.1) — aggregate platform stats. Read-only.
+ * GET  /api/admin/users            (task 17.2) — list users (id/username/email/appRole) for the
+ *                                   role-management UI. Read-only.
  * PUT  /api/admin/users/:id/role   (task 9.2) — change a user's canonical appRole.
  *
  * Both are Admin-only, enforced by the `global::has-app-role` policy on the route (see
@@ -24,6 +26,17 @@ export default {
     const totalEnrollments = await strapi.db.query('api::enrollment.enrollment').count();
 
     ctx.body = { usersByRole, totalCourses, totalEnrollments };
+  },
+
+  async listUsers(ctx: any) {
+    // Roster for the admin role-management UI (task 17.2). Select only the columns the UI needs —
+    // never return password/reset/confirmation token fields. Ordered by id for a stable list.
+    const users = await strapi.db.query('plugin::users-permissions.user').findMany({
+      select: ['id', 'username', 'email', 'appRole'],
+      orderBy: { id: 'asc' },
+    });
+
+    ctx.body = { users };
   },
 
   async setUserRole(ctx: any) {

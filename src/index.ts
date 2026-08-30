@@ -82,6 +82,9 @@ const BASELINE_PERMISSIONS: Record<'public' | 'authenticated', string[]> = {
     'api::blog-post.blog-post.publish',
     // Task 9.1: platform stats — Admin only (has-app-role {admin} on the route).
     'api::admin.admin.stats',
+    // Task 17.2: list users for the role-management UI — Admin only (has-app-role {admin} on the
+    // route). Opened to Authenticated only so an admin JWT reaches the policy; the policy restricts.
+    'api::admin.admin.listUsers',
     // Task 9.2: change a user's appRole — Admin only (has-app-role {admin} on the route).
     // Route must be opened to Authenticated so an admin JWT reaches the policy; the policy
     // (not this grant) is what restricts it to admins.

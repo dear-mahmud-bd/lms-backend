@@ -18,6 +18,10 @@ import { factories } from '@strapi/strapi';
 function toResponse(n: any) {
   return {
     id: n.id,
+    // documentId is the identifier the mark-read route resolves (`PUT /notifications/:id/read` →
+    // is-owner loads by documentId). The list must expose it so the client can mark a row read
+    // (task 18.1). Numeric `id` is kept for display/keying.
+    documentId: n.documentId,
     message: n.message,
     type: n.type,
     isRead: n.isRead,

@@ -69,7 +69,31 @@ export default factories.createCoreController('api::blog-post.blog-post', ({ str
   },
 
   async find(ctx) {
-    const vis = await visibilityFilter(strapi, ctx.state.user);
+    const user = ctx.state.user;
+
+    // Opt-in management scope (task 16.2): `?mine=true` returns only the caller's
+    // OWN posts (all statuses). The management list needs this because the client
+    // can't tell which published posts a content-manager owns — the `author`
+    // relation is stripped by the output sanitizer. Public reads never pass `mine`,
+    // so their published-only visibility is unchanged. `mine` isn't a valid
+    // content-API query key, so we consume and strip it before delegating.
+    const mine = ctx.query?.mine === 'true' || ctx.query?.mine === true;
+    if (ctx.query && 'mine' in ctx.query) delete (ctx.query as any).mine;
+
+    if (mine && (user?.appRole === 'admin' || user?.appRole === 'content-manager')) {
+      const own = await strapi.db
+        .query('api::blog-post.blog-post')
+        .findMany({ where: { author: user.id }, select: ['id'] });
+      const ownIds = own.map((p: any) => p.id);
+      ctx.query = {
+        ...ctx.query,
+        // Empty set → match nothing (never fall through to "all") .
+        filters: { ...((ctx.query?.filters as object) || {}), id: { $in: ownIds.length ? ownIds : [-1] } },
+      };
+      return super.find(ctx);
+    }
+
+    const vis = await visibilityFilter(strapi, user);
     if (vis) {
       // AND the visibility rule with any client-supplied filters.
       ctx.query = {
